@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>오늘의 할 일</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+
+<body>
+    <div class="app-container">
+        <header>
+            <div class="header-top">
+                <h1>To Do List</h1>
+                <p id="current-date" class="date-display"></p>
+            </div>
+
+            <button id="add-btn" class="primary-btn">
+                <i class="ph ph-plus"></i>
+                <span>새로운 할 일 추가</span>
+            </button>
+        </header>
+
+        <main>
+            <!-- Today's Todos (Always shown) -->
+            <div id="today-section" style="margin-bottom: 2rem;">
+                <div class="section-header">
+                    <h2 class="section-title">☀️ 오늘의 할 일</h2>
+                    <span class="badge" id="today-count">0</span>
+                </div>
+                <ul id="today-list" class="todo-list today-list">
+                    <!-- Todos will be injected here -->
+                </ul>
+                <div id="today-empty-state" class="empty-state" style="display: none; padding: 2.5rem 1rem; margin-top: 1rem;">
+                    <i class="ph ph-calendar-check" style="font-size: 2.5rem; margin-bottom: 0.5rem;"></i>
+                    <p style="margin: 0;">오늘 등록된 할 일이 없습니다.</p>
+                </div>
+            </div>
+
+            <!-- View Toggle -->
+            <div class="view-toggle">
+                <button id="view-list-btn" class="toggle-btn">
+                    <i class="ph ph-list-dashes"></i>
+                    <span>목록으로 보기</span>
+                </button>
+                <button id="view-calendar-btn" class="toggle-btn active">
+                    <i class="ph ph-calendar-blank"></i>
+                    <span>달력으로 보기</span>
+                </button>
+            </div>
+
+            <div class="todo-list-container" id="list-view-container" style="display: none;">
+                <!-- All Other Todos -->
+                <div id="other-section" style="display: none;">
+                    <div class="section-header">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <h2 class="section-title">📋 모든 할 일</h2>
+                            <span class="badge" id="other-count">0</span>
+                        </div>
+                        <div class="filter-group">
+                            <button id="filter-all" class="filter-btn active">전체</button>
+                            <button id="filter-completed" class="filter-btn">완료</button>
+                            <button id="filter-incomplete" class="filter-btn">미완료</button>
+                        </div>
+                    </div>
+                    <ul id="other-list" class="todo-list">
+                        <!-- Todos will be injected here -->
+                    </ul>
+                </div>
+
+                <div id="empty-state" class="empty-state">
+                    <i class="ph ph-list-checks"></i>
+                    <p>등록된 할 일이 없습니다. 새로운 할 일을 추가해보세요!</p>
+                </div>
+            </div>
+
+            <!-- Calendar View Container -->
+            <div class="calendar-container" id="calendar-view-container" style="display: flex;">
+                <div class="calendar-header">
+                    <button id="prev-month-btn" class="icon-btn"><i class="ph ph-caret-left"></i></button>
+                    <h2 id="calendar-month-title" class="section-title">2026년 3월</h2>
+                    <button id="next-month-btn" class="icon-btn"><i class="ph ph-caret-right"></i></button>
+                </div>
+                <div class="calendar-grid">
+                    <div class="weekdays">
+                        <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
+                    </div>
+                    <div id="calendar-days" class="days">
+                        <!-- Days will be injected here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal -->
+    <div id="todo-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">새로운 할 일</h2>
+                <button id="close-modal" class="close-btn"><i class="ph ph-x"></i></button>
+            </div>
+            <form id="todo-form">
+                <div class="form-group">
+                    <label for="todo-title">할 일 제목</label>
+                    <input type="text" id="todo-title" placeholder="할 일 제목을 입력하세요" required>
+                </div>
+                <div class="form-group">
+                    <label for="todo-date">날짜</label>
+                    <input type="date" id="todo-date" required>
+                </div>
+                <div class="form-group">
+                    <label for="todo-desc">상세 내용</label>
+                    <textarea id="todo-desc" placeholder="상세 내용을 입력하세요 (선택사항)" rows="4"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="toggle-complete-btn" class="secondary-btn" style="display: none; margin-right: auto;">완료하기</button>
+                    <button type="button" id="cancel-btn" class="secondary-btn">취소</button>
+                    <button type="submit" id="submit-btn" class="primary-btn">저장하기</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Day Detail Modal -->
+    <div id="day-detail-modal" class="modal">
+        <div class="modal-content day-detail-content">
+            <div class="modal-header">
+                <h2 id="day-detail-title">3월 15일의 할 일</h2>
+                <button id="close-day-detail" class="close-btn"><i class="ph ph-x"></i></button>
+            </div>
+            <div id="day-detail-list" class="day-detail-list">
+                <!-- Day todos will be injected here -->
+            </div>
+            <div class="day-detail-empty" id="day-detail-empty" style="display: none;">
+                <i class="ph ph-calendar-blank"></i>
+                <p>이 날짜에 등록된 할 일이 없습니다.</p>
+            </div>
+            <button id="day-detail-add-btn" class="primary-btn" style="margin-top: 1rem;">
+                <i class="ph ph-plus"></i>
+                <span>이 날짜에 할 일 추가</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Toast Notification for feedback -->
+    <div id="toast" class="toast">할 일이 추가되었습니다.</div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
