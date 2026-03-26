@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeBtn = document.getElementById('close-modal');
     const cancelBtn = document.getElementById('cancel-btn');
     const todoForm = document.getElementById('todo-form');
-    
+
     const todaySection = document.getElementById('today-section');
     const otherSection = document.getElementById('other-section');
     const todayList = document.getElementById('today-list');
@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const todayCount = document.getElementById('today-count');
     const otherCount = document.getElementById('other-count');
     const emptyState = document.getElementById('empty-state');
-    
+
     const dateInput = document.getElementById('todo-date');
     const toast = document.getElementById('toast');
     const modalTitle = document.getElementById('modal-title');
@@ -48,6 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // State
     // Format of todo: { id, title, date, desc, completed, createdAt }
+    const API_BASE_URL = pk_9f132b7e41fd953b13d3ede9b3965d3fb567085a443a0a79958259a7e3860d39 // TODO: 본인의 bkend.ai 환경에 맞게 이 URL을 변경하세요.
     let todos = [];
     let currentView = 'calendar'; // 'list' or 'calendar'
     let currentFilter = 'all'; // 'all', 'completed', 'incomplete'
@@ -69,9 +70,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fetch from Backend API
     async function fetchTodos() {
         try {
-            const res = await fetch('/api/todos');
+            const res = await fetch(API_BASE_URL);
             if (res.ok) {
-                todos = await res.json();
+                const data = await res.json();
+                todos = Array.isArray(data) ? data : (data.data || []);
             } else {
                 console.error('Failed to fetch todos');
             }
@@ -85,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
         const today = new Date();
         currentDateEl.textContent = today.toLocaleDateString('ko-KR', options);
-        
+
         // Also set default date in modal date picker (local timezone)
         const tzoffset = (new Date()).getTimezoneOffset() * 60000;
         const localISOTime = (new Date(Date.now() - tzoffset)).toISOString().split('T')[0];
@@ -186,7 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function openModal(isEdit = false, todo = null) {
         modal.classList.add('active');
         document.getElementById('todo-title').focus();
-        
+
         if (isEdit && todo) {
             modalTitle.textContent = '할 일 상세 정보';
             submitBtn.textContent = '수정하기';
@@ -194,7 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('todo-date').value = todo.date;
             document.getElementById('todo-desc').value = todo.desc;
             currentEditingId = todo.id;
-            
+
             toggleCompleteBtn.style.display = 'block';
             toggleCompleteBtn.textContent = todo.completed ? '미완료로 변경' : '완료하기';
         } else {
@@ -226,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Handle Form Submit
     todoForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         const title = document.getElementById('todo-title').value.trim();
         const date = document.getElementById('todo-date').value;
         const desc = document.getElementById('todo-desc').value.trim();
@@ -240,12 +242,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 todo.title = title;
                 todo.date = date;
                 todo.desc = desc;
-                
+
                 try {
-                    await fetch('/api/todos', {
-                        method: 'PUT',
+                    await fetch(`${API_BASE_URL}/${todo.id}`, {
+                        method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(todo)
+                        body: JSON.stringify({ title, date, desc })
                     });
                     showToast('할 일이 수정되었습니다! ✨');
                 } catch (e) {
@@ -256,23 +258,22 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             // Add mode
             const newTodo = {
-                id: Date.now().toString(),
                 title,
                 date,
                 desc,
-                completed: false,
-                createdAt: new Date().toISOString()
+                completed: false
             };
-            
+
             try {
-                const res = await fetch('/api/todos', {
+                const res = await fetch(API_BASE_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(newTodo)
                 });
-                
+
                 if (res.ok) {
-                    todos.unshift(newTodo);
+                    const savedTodo = await res.json();
+                    todos.unshift(savedTodo.data || savedTodo);
                     showToast('할 일이 성공적으로 추가되었습니다! 🎉');
                 } else {
                     console.error('Server returned error on POST');
@@ -295,10 +296,10 @@ document.addEventListener('DOMContentLoaded', () => {
         li.className = `todo-item ${isToday ? 'today' : ''} ${todo.completed ? 'completed' : ''}`;
         li.style.cursor = 'pointer'; // indicate it's clickable
         li.dataset.id = todo.id;
-        
+
         const titleStyle = todo.completed ? 'text-decoration: line-through; color: var(--text-muted);' : '';
         const checkIcon = todo.completed ? 'ph-check-circle' : 'ph-circle';
-        
+
         li.innerHTML = `
             <div class="todo-header">
                 <div class="todo-title" style="${titleStyle}">${escapeHTML(todo.title)}</div>
@@ -324,12 +325,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderTodos() {
         todayList.innerHTML = '';
         otherList.innerHTML = '';
-        
+
         const todayStr = getTodayString();
-        
+
         const todayTodos = todos.filter(t => t.date === todayStr);
         let otherTodos = todos.filter(t => t.date !== todayStr);
-        
+
         // Render Today's
         if (todayTodos.length > 0) {
             document.getElementById('today-empty-state').style.display = 'none';
@@ -349,7 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (currentFilter === 'incomplete') {
             otherTodos = otherTodos.filter(t => !t.completed);
         }
-        
+
         // Sort remaining by date descending
         otherTodos.sort((a, b) => new Date(b.date) - new Date(a.date));
 
@@ -371,7 +372,7 @@ document.addEventListener('DOMContentLoaded', () => {
             item.addEventListener('click', (e) => {
                 // Ignore clicks on action buttons
                 if (e.target.closest('.todo-actions')) return;
-                
+
                 const id = e.currentTarget.dataset.id;
                 const todo = todos.find(t => t.id === id);
                 if (todo) openModal(true, todo);
@@ -398,13 +399,13 @@ document.addEventListener('DOMContentLoaded', () => {
         calendarDays.innerHTML = '';
         const year = currentCalendarDate.getFullYear();
         const month = currentCalendarDate.getMonth();
-        
+
         // Update Title
         calendarMonthTitle.textContent = `${year}년 ${month + 1}월`;
 
         const firstDayOfMonth = new Date(year, month, 1).getDay(); // 0 (Sun) to 6 (Sat)
         const daysInMonth = new Date(year, month + 1, 0).getDate();
-        
+
         const todayStr = getTodayString();
 
         // Previous month padding
@@ -417,14 +418,14 @@ document.addEventListener('DOMContentLoaded', () => {
         // Current month days
         for (let day = 1; day <= daysInMonth; day++) {
             const dayCell = document.createElement('div');
-            
+
             // Format YYYY-MM-DD for matching
             const monthStr = String(month + 1).padStart(2, '0');
             const dayStr = String(day).padStart(2, '0');
             const dateString = `${year}-${monthStr}-${dayStr}`;
 
             dayCell.className = `calendar-day${dateString === todayStr ? ' today' : ''}`;
-            
+
             // Make Sundays red if needed (optional styling)
             const isSunday = new Date(year, month, day).getDay() === 0;
             if (isSunday) dayCell.classList.add('holiday');
@@ -437,13 +438,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Find todos for this date
             const dayTodos = todos.filter(t => t.date === dateString);
-            
+
             dayTodos.forEach(todo => {
                 const todoIndicator = document.createElement('div');
                 todoIndicator.className = `calendar-todo-item${todo.completed ? ' completed' : ''}`;
                 todoIndicator.textContent = todo.title;
                 todoIndicator.title = todo.desc ? `${todo.title}\n${todo.desc}` : todo.title;
-                
+
                 // Click on custom indicator to open modal
                 todoIndicator.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -452,7 +453,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 dayCell.appendChild(todoIndicator);
             });
-            
+
             // Click empty space to add new todo on that date
             dayCell.addEventListener('click', () => {
                 openDayDetailModal(dateString);
@@ -481,7 +482,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const date = new Date(dateString + 'T00:00:00');
         const options = { month: 'long', day: 'numeric', weekday: 'short' };
         dayDetailTitle.textContent = `${date.toLocaleDateString('ko-KR', options)}의 할 일`;
-        
+
         renderDayDetailList(dateString);
         dayDetailModal.classList.add('active');
     }
@@ -545,10 +546,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (todo) {
             todo.completed = !todo.completed;
             try {
-                await fetch('/api/todos', {
-                    method: 'PUT',
+                await fetch(`${API_BASE_URL}/${todo.id}`, {
+                    method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(todo)
+                    body: JSON.stringify({ completed: todo.completed })
                 });
                 await fetchTodos();
                 renderActiveView();
@@ -564,7 +565,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Delete Todo
     async function deleteTodo(id) {
         try {
-            await fetch(`/api/todos?id=${id}`, { method: 'DELETE' });
+            await fetch(`${API_BASE_URL}/${id}`, { method: 'DELETE' });
             await fetchTodos();
             renderActiveView();
             showToast('할 일이 삭제되었습니다.');
