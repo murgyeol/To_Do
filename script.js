@@ -48,7 +48,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // State
     // Format of todo: { id, title, date, desc, completed, createdAt }
-    const API_BASE_URL = pk_9f132b7e41fd953b13d3ede9b3965d3fb567085a443a0a79958259a7e3860d39 // TODO: 본인의 bkend.ai 환경에 맞게 이 URL을 변경하세요.
+    const API_BASE_URL = 'https://api.bkend.ai/v1/data/todos';
+    // TODO: 발급받은 새 API Key로 교체해주세요. (wg-murygeol-10 / to-do 프로젝트용)
+    const API_KEY = 'pk_9f132b7e41fd953b13d3ede9b3965d3fb567085a443a0a79958259a7e3860d39';
     let todos = [];
     let currentView = 'calendar'; // 'list' or 'calendar'
     let currentFilter = 'all'; // 'all', 'completed', 'incomplete'
@@ -70,7 +72,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Fetch from Backend API
     async function fetchTodos() {
         try {
-            const res = await fetch(API_BASE_URL);
+            const res = await fetch(API_BASE_URL, {
+                headers: { 'Authorization': `Bearer ${API_KEY}` }
+            });
             if (res.ok) {
                 const data = await res.json();
                 todos = Array.isArray(data) ? data : (data.data || []);
@@ -246,7 +250,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 try {
                     await fetch(`${API_BASE_URL}/${todo.id}`, {
                         method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${API_KEY}`
+                        },
                         body: JSON.stringify({ title, date, desc })
                     });
                     showToast('할 일이 수정되었습니다! ✨');
@@ -267,7 +274,10 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const res = await fetch(API_BASE_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${API_KEY}`
+                    },
                     body: JSON.stringify(newTodo)
                 });
 
@@ -548,7 +558,10 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 await fetch(`${API_BASE_URL}/${todo.id}`, {
                     method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${API_KEY}`
+                    },
                     body: JSON.stringify({ completed: todo.completed })
                 });
                 await fetchTodos();
@@ -565,7 +578,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Delete Todo
     async function deleteTodo(id) {
         try {
-            await fetch(`${API_BASE_URL}/${id}`, { method: 'DELETE' });
+            await fetch(`${API_BASE_URL}/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${API_KEY}` }
+            });
             await fetchTodos();
             renderActiveView();
             showToast('할 일이 삭제되었습니다.');
