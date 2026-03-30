@@ -97,6 +97,27 @@
         </main>
     </div>
 
+    <!-- Day Detail Modal -->
+    <div id="day-detail-modal" class="modal">
+        <div class="modal-content day-detail-content">
+            <div class="modal-header">
+                <h2 id="day-detail-title">3월 15일의 할 일</h2>
+                <button id="close-day-detail" class="close-btn"><i class="ph ph-x"></i></button>
+            </div>
+            <div id="day-detail-list" class="day-detail-list">
+                <!-- Day todos will be injected here -->
+            </div>
+            <div class="day-detail-empty" id="day-detail-empty" style="display: none;">
+                <i class="ph ph-calendar-blank"></i>
+                <p>이 날짜에 등록된 할 일이 없습니다.</p>
+            </div>
+            <button id="day-detail-add-btn" class="primary-btn" style="margin-top: 1rem;">
+                <i class="ph ph-plus"></i>
+                <span>이 날짜에 할 일 추가</span>
+            </button>
+        </div>
+    </div>
+
     <!-- Modal -->
     <div id="todo-modal" class="modal">
         <div class="modal-content">
@@ -123,27 +144,6 @@
                     <button type="submit" id="submit-btn" class="primary-btn">저장하기</button>
                 </div>
             </form>
-        </div>
-    </div>
-
-    <!-- Day Detail Modal -->
-    <div id="day-detail-modal" class="modal">
-        <div class="modal-content day-detail-content">
-            <div class="modal-header">
-                <h2 id="day-detail-title">3월 15일의 할 일</h2>
-                <button id="close-day-detail" class="close-btn"><i class="ph ph-x"></i></button>
-            </div>
-            <div id="day-detail-list" class="day-detail-list">
-                <!-- Day todos will be injected here -->
-            </div>
-            <div class="day-detail-empty" id="day-detail-empty" style="display: none;">
-                <i class="ph ph-calendar-blank"></i>
-                <p>이 날짜에 등록된 할 일이 없습니다.</p>
-            </div>
-            <button id="day-detail-add-btn" class="primary-btn" style="margin-top: 1rem;">
-                <i class="ph ph-plus"></i>
-                <span>이 날짜에 할 일 추가</span>
-            </button>
         </div>
     </div>
 
