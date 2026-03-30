@@ -48,9 +48,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // State
     // Format of todo: { id, title, date, desc, completed, createdAt }
-    const API_BASE_URL = 'https://api.bkend.ai/v1/data/todos';
-    // TODO: 발급받은 새 API Key로 교체해주세요. (wg-murygeol-10 / to-do 프로젝트용)
-    const API_KEY = 'pk_9f132b7e41fd953b13d3ede9b3965d3fb567085a443a0a79958259a7e3860d39';
+    const firebaseConfig = {
+        apiKey: 'AIzaSyA3wZQzIcEsunLrPWbOFLNpZYoeiG6By8I',
+        authDomain: 'todo-4d0d7.firebaseapp.com',
+        databaseURL: 'https://todo-4d0d7-default-rtdb.firebaseio.com',
+        projectId: 'todo-4d0d7',
+        storageBucket: 'todo-4d0d7.firebasestorage.app',
+        messagingSenderId: '886996608861',
+        appId: '1:886996608861:web:73bae81f44befdd9eb2ab4',
+        measurementId: 'G-D9EWD6C41D'
+    };
+    // Firebase Realtime Database endpoint (todos collection)
+    const FIREBASE_DB_URL = `${firebaseConfig.databaseURL}/todos`;
     let todos = [];
     let currentView = 'calendar'; // 'list' or 'calendar'
     let currentFilter = 'all'; // 'all', 'completed', 'incomplete'
@@ -69,18 +78,26 @@ document.addEventListener('DOMContentLoaded', () => {
         renderActiveView();
     }
 
-    // Fetch from Backend API
+    // Fetch from Firebase Realtime Database
     async function fetchTodos() {
         try {
-            const res = await fetch(API_BASE_URL, {
-                headers: { 'Authorization': `Bearer ${API_KEY}` }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                todos = Array.isArray(data) ? data : (data.data || []);
-            } else {
-                console.error('Failed to fetch todos');
+            const res = await fetch(`${FIREBASE_DB_URL}.json`);
+            if (!res.ok) throw new Error('Failed to fetch todos');
+
+            const data = await res.json();
+            if (!data) {
+                todos = [];
+                return;
             }
+
+            todos = Object.entries(data).map(([id, value]) => ({
+                id,
+                title: value.title,
+                date: value.date,
+                desc: value.desc || '',
+                completed: Boolean(value.completed),
+                createdAt: value.createdAt || value.date
+            })).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         } catch (e) {
             console.error('Error fetching todos:', e);
         }
@@ -248,12 +265,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 todo.desc = desc;
 
                 try {
-                    await fetch(`${API_BASE_URL}/${todo.id}`, {
+                    await fetch(`${FIREBASE_DB_URL}/${todo.id}.json`, {
                         method: 'PATCH',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${API_KEY}`
-                        },
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ title, date, desc })
                     });
                     showToast('할 일이 수정되었습니다! ✨');
@@ -268,22 +282,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 title,
                 date,
                 desc,
-                completed: false
+                completed: false,
+                createdAt: new Date().toISOString()
             };
 
             try {
-                const res = await fetch(API_BASE_URL, {
+                const res = await fetch(`${FIREBASE_DB_URL}.json`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${API_KEY}`
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(newTodo)
                 });
 
                 if (res.ok) {
-                    const savedTodo = await res.json();
-                    todos.unshift(savedTodo.data || savedTodo);
+                    const saved = await res.json(); // { name: "<firebase-id>" }
+                    const savedTodo = { ...newTodo, id: saved.name };
+                    todos.unshift(savedTodo);
                     showToast('할 일이 성공적으로 추가되었습니다! 🎉');
                 } else {
                     console.error('Server returned error on POST');
@@ -556,12 +569,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (todo) {
             todo.completed = !todo.completed;
             try {
-                await fetch(`${API_BASE_URL}/${todo.id}`, {
+                await fetch(`${FIREBASE_DB_URL}/${todo.id}.json`, {
                     method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${API_KEY}`
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ completed: todo.completed })
                 });
                 await fetchTodos();
@@ -578,10 +588,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Delete Todo
     async function deleteTodo(id) {
         try {
-            await fetch(`${API_BASE_URL}/${id}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${API_KEY}` }
-            });
+            await fetch(`${FIREBASE_DB_URL}/${id}.json`, { method: 'DELETE' });
             await fetchTodos();
             renderActiveView();
             showToast('할 일이 삭제되었습니다.');
