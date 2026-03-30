@@ -335,11 +335,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     </button>
                 </div>
             </div>
-            <div class="todo-date">
-                <i class="ph ph-calendar-blank"></i>
-                ${formatDate(todo.date)}
-            </div>
-            ${todo.desc ? `<div class="todo-desc">${escapeHTML(todo.desc)}</div>` : ''}
         `;
         return li;
     }
