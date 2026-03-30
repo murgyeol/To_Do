@@ -264,13 +264,38 @@ header {
 .todo-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.todo-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    min-width: 0;
 }
 
 .todo-title {
     font-size: 1.15rem;
     font-weight: 600;
     transition: color 0.2s;
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.todo-date-inline {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.todo-date-inline.today {
+    color: var(--primary);
 }
 
 .todo-actions {

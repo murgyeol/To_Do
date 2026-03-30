@@ -322,10 +322,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const titleStyle = todo.completed ? 'text-decoration: line-through; color: var(--text-muted);' : '';
         const checkIcon = todo.completed ? 'ph-check-circle' : 'ph-circle';
+        const isTodayDate = todo.date === getTodayString();
+        const dateLabel = isTodayDate ? '오늘' : formatDateShort(todo.date);
 
         li.innerHTML = `
             <div class="todo-header">
-                <div class="todo-title" style="${titleStyle}">${escapeHTML(todo.title)}</div>
+                <div class="todo-title-row">
+                    <div class="todo-title" style="${titleStyle}">${escapeHTML(todo.title)}</div>
+                    <span class="todo-date-inline ${isTodayDate ? 'today' : ''}">${dateLabel}</span>
+                </div>
                 <div class="todo-actions">
                     <button class="icon-btn check" data-id="${todo.id}" title="${todo.completed ? '미완료로 변경' : '완료'}">
                         <i class="ph ${checkIcon}"></i>
@@ -597,6 +602,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function formatDate(dateStr) {
         const date = new Date(dateStr);
         return date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
+    }
+
+    // Utility: Short Date for inline labels
+    function formatDateShort(dateStr) {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
     }
 
     // Utility: Escape HTML to prevent XSS
