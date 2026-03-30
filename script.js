@@ -374,8 +374,8 @@ document.addEventListener('DOMContentLoaded', () => {
             otherTodos = otherTodos.filter(t => !t.completed);
         }
 
-        // Sort remaining by date descending
-        otherTodos.sort((a, b) => new Date(b.date) - new Date(a.date));
+        // Sort remaining by date ascending
+        otherTodos.sort((a, b) => new Date(a.date) - new Date(b.date));
 
         // Render Others
         if (otherTodos.length > 0) {
